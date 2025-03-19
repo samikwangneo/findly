@@ -7,6 +7,7 @@ import { RootStackParamList } from '..';
 import { useThemeColor } from '../../hooks/useThemeColor';
 import { ThemedText } from '../../components/ThemedText';
 import { API_URL } from '../../constants/Config';
+import * as Location from 'expo-location';
 
 type FinderScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Finder'>;
 
@@ -70,17 +71,52 @@ const FinderScreen: React.FC<Props> = ({ navigation }) => {
     setLoading(true);
     
     try {
-      // Create form data for the upload
+    // Request location permission
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert("Location permission denied. Uploading without location.");
+        // Proceed without location if denied
+      }
+      
+      let latitude = null;
+      let longitude = null;
+      if (status === 'granted') {
+        const location = await Location.getCurrentPositionAsync({});
+        latitude = location.coords.latitude;
+        longitude = location.coords.longitude;
+        console.log('Location:', latitude, longitude);
+      }
+
+      console.log('Image URI:', image);
       const formData = new FormData();
-      formData.append('image', {
+
+      const now = new Date();
+      const formattedDate = now.toISOString()
+        .replace(/T/, '_')                   
+        .replace(/:|\./g, '-')              
+        .slice(0, 19);           
+      
+      const baseFileName = `upload_${formattedDate}`;
+      const fileName = latitude && longitude 
+        ? `${baseFileName}_${latitude.toFixed(5)}_${longitude.toFixed(5)}.jpg` 
+        : `${baseFileName}.jpg`; // Fallback if no location
+
+      // Create the file object
+      const fileObj = {
         uri: image,
         type: 'image/jpeg',
-        name: 'upload.jpg',
-      } as any);
+        name: fileName,
+      };
       
-      // Upload to your Python backend
-      // This is a placeholder - you'll need to implement the actual API endpoint
-      const response = await fetch(`${API_URL}/upload-found-item`, {
+      // @ts-ignore to bypass TypeScript checking
+      formData.append('file', fileObj);
+      if (latitude && longitude) {
+        formData.append('latitude', latitude.toString());
+        formData.append('longitude', longitude.toString());
+      }
+      
+      console.log('Uploading to:', `${API_URL}/upload`);
+      const response = await fetch(`${API_URL}/upload`, {
         method: 'POST',
         body: formData,
         headers: {
@@ -88,17 +124,20 @@ const FinderScreen: React.FC<Props> = ({ navigation }) => {
         },
       });
       
-      const result = await response.json();
+      console.log('Response status:', response.status);
       
-      if (result.success) {
-        alert("Item uploaded successfully!");
-        navigation.navigate('Home');
-      } else {
-        alert("Failed to upload item. Please try again.");
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
+      
+      const result = await response.json();
+      console.log('Server response:', result);
+      
+      alert("Item uploaded successfully!");
+      navigation.navigate('Home');
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("An error occurred. Please try again later.");
+      alert(`Upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setLoading(false);
     }
