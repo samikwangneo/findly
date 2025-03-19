@@ -1,10 +1,9 @@
 import React from 'react';
-import { View, StyleSheet, FlatList, Image, TouchableOpacity, Linking } from 'react-native';
+import { View, StyleSheet, FlatList, Image, TouchableOpacity } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { RootStackParamList } from '..';
-import { useThemeColor } from '../../hooks/useThemeColor';
 import { ThemedText } from '../../components/ThemedText';
 import { API_URL } from '../../constants/Config';
 
@@ -25,27 +24,33 @@ type ResultItemType = {
 const ResultScreen: React.FC<Props> = ({ navigation, route }) => {
   const { searchQuery, searchResults = [] } = route.params || {};
   
-  const backgroundColor = '#11181C'
-  const cardColor = '#808080'
-  const primaryColor = '#0a7ea4'
+  const backgroundColor = '#11181C';
+  const cardColor = '#808080';
+  const primaryColor = '#0a7ea4';
   
   const contactFinder = (item: ResultItemType) => {
-    // In a real app, this would open a chat or show contact info
     alert(`Contact feature would connect you with the finder of item ${item.id}`);
   };
   
   const renderItem = ({ item }: { item: ResultItemType }) => {
+    console.log('Rendering image URL:', item.imagePath); // Debug log
     const confidencePercent = Math.round(item.confidence * 100);
+    const filename = item.imagePath.split('\\').pop() || 'Unknown';
     
     return (
       <View style={[styles.resultCard, { backgroundColor: cardColor }]}>
         <Image 
-          source={{ uri: `${API_URL}/images/${item.imagePath}` }} 
+          source={{ uri: item.imagePath }} 
           style={styles.resultImage}
           defaultSource={require('../../assets/images/placeholder.png')}
+          onError={(e) => console.log('Image load error:', e.nativeEvent.error)}
+          key={item.imagePath} // Ensure re-render
         />
         
         <View style={styles.resultDetails}>
+          <ThemedText style={styles.filenameText}>
+            File: {filename}
+          </ThemedText>
           <ThemedText style={styles.confidenceText}>
             Match Confidence: <ThemedText style={styles.confidenceValue}>{confidencePercent}%</ThemedText>
           </ThemedText>
@@ -131,6 +136,11 @@ const styles = StyleSheet.create({
   },
   resultDetails: {
     padding: 16,
+  },
+  filenameText: {
+    fontSize: 14,
+    marginBottom: 8,
+    color: '#fff',
   },
   confidenceText: {
     fontSize: 16,
