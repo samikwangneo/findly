@@ -35,7 +35,13 @@ const ResultScreen: React.FC<Props> = ({ navigation, route }) => {
   const renderItem = ({ item }: { item: ResultItemType }) => {
     console.log('Rendering image URL:', item.imagePath); // Debug log
     const confidencePercent = Math.round(item.confidence * 100);
-    const filename = item.imagePath.split('\\').pop() || 'Unknown';
+    const split_file_name = item.imagePath.split("/");
+    const date_file_name_split = split_file_name[4].substring(7,26).split("_");
+    const date_file_name = date_file_name_split[0] + ", at " + date_file_name_split[1].substring(0,2) + 
+    ":" + date_file_name_split[1].substring(3,5) + ":" + date_file_name_split[1].substring(6,8);
+    const filename = date_file_name;
+    const location_coords = split_file_name[4].substring(27, 45).split("_") || 'Unknown';
+    const location_name = location_coords[0] + ", " + location_coords[1] || 'Unknown';
     
     return (
       <View style={[styles.resultCard, { backgroundColor: cardColor }]}>
@@ -49,7 +55,10 @@ const ResultScreen: React.FC<Props> = ({ navigation, route }) => {
         
         <View style={styles.resultDetails}>
           <ThemedText style={styles.filenameText}>
-            File: {filename}
+            Date Found: {filename}
+          </ThemedText>
+          <ThemedText style={styles.filenameText}>
+            Location Found: {location_name}
           </ThemedText>
           <ThemedText style={styles.confidenceText}>
             Match Confidence: <ThemedText style={styles.confidenceValue}>{confidencePercent}%</ThemedText>
@@ -131,7 +140,7 @@ const styles = StyleSheet.create({
   },
   resultImage: {
     width: '100%',
-    height: 200,
+    height: 300,
     resizeMode: 'cover',
   },
   resultDetails: {
