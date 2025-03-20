@@ -1,4 +1,3 @@
 // API URL for your Python backend
-// Replace with your actual API URL when deploying
-export const API_URL = 'https://09c6-32-217-55-103.ngrok-free.app';
-export const CLIP_API_URL = 'https://snow-cardiovascular-jpg-barnes.trycloudflare.com';
+export const API_URL = 'https://272f-32-217-55-103.ngrok-free.app';
+export const CLIP_API_URL = 'https://stunning-fluid-mls-adams.trycloudflare.com  ';

@@ -1,10 +1,111 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator, ScrollView, TextInput } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { View, StyleSheet, TouchableOpacity, TextInput, FlatList } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RootStackParamList } from '..';
 import { ThemedText } from '../../components/ThemedText';
-import { CLIP_API_URL } from '../../constants/Config';
+import { API_URL } from '../../constants/Config';
+
+const UMD_BUILDINGS = [
+  "Adele H. Stamp Student Union",
+  "A. James Clark Hall",
+  "Animal Sciences Building",
+  "Annapolis Hall",
+  "Anne Arundel Hall",
+  "Architecture Building",
+  "Art-Sociology Building",
+  "Atlantic Building",
+  "Baltimore Hall",
+  "Bel Air Hall",
+  "Biology-Psychology Building",
+  "Biomolecular Sciences Building",
+  "Bioscience Research Building",
+  "Brendan Iribe Center", // Added here
+  "Byrd Stadium",
+  "Calvert Hall",
+  "Cambridge Hall",
+  "Caroline Hall",
+  "Carroll Hall",
+  "Cecil Hall",
+  "Centreville Hall",
+  "Charles Hall",
+  "Chemical and Nuclear Engineering Building",
+  "Chemistry Building",
+  "Chestertown Hall",
+  "Chincoteague Hall",
+  "Clarice Smith Performing Arts Center",
+  "Cole Student Activities Building",
+  "Computer Science Instructional Center",
+  "Cumberland Hall",
+  "Denton Hall",
+  "Dorchester Hall",
+  "Easton Hall",
+  "Education Building",
+  "Elkton Hall",
+  "Ellicott Hall",
+  "Energy Research Facility",
+  "Engineering Laboratory Building",
+  "Francis Scott Key Hall",
+  "Frederick Hall",
+  "Garrett Hall",
+  "Geology Building",
+  "H.J. Patterson Hall",
+  "Hagerstown Hall",
+  "Harford Hall",
+  "Hornbake Library",
+  "Howard Hall",
+  "Jiménez Hall",
+  "J.M. Patterson Hall",
+  "Johnson-Whittle Hall",
+  "Jull Hall",
+  "Kent Hall",
+  "Kim Engineering Building",
+  "Knight Hall",
+  "La Plata Hall",
+  "LeFrak Hall",
+  "Marie Mount Hall",
+  "Mathematics Building",
+  "McKeldin Library",
+  "Memorial Chapel",
+  "Montgomery Hall",
+  "Morrill Hall",
+  "Oakland Hall",
+  "Physics Building",
+  "Plant Sciences Building",
+  "Preinkert Field House",
+  "Prince Frederick Hall",
+  "Prince George's Hall",
+  "Pyon-Chen Hall",
+  "Queen Anne's Hall",
+  "Reckord Armory",
+  "Ritchie Coliseum",
+  "Rossborough Inn",
+  "School of Public Health Building",
+  "SECU Stadium",
+  "Shoemaker Building",
+  "Shriver Laboratory",
+  "Skinner Building",
+  "Somerset Hall",
+  "South Campus Dining Hall",
+  "St. Mary's Hall",
+  "Susquehanna Hall",
+  "Symons Hall",
+  "Talbot Hall",
+  "Taliaferro Hall",
+  "Tawes Fine Arts Building",
+  "Thomas V. Miller, Jr. Administration Building",
+  "Thurgood Marshall Hall",
+  "Turner Hall",
+  "Tydings Hall",
+  "Van Munching Hall",
+  "Washington Hall",
+  "Wicomico Hall",
+  "William E. Kirwan Hall",
+  "Wind Tunnel Building",
+  "Woods Hall",
+  "Worcester Hall",
+  "Xfinity Center",
+  "Yahentamitsi Dining Hall"
+];
 
 type SearcherScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Searcher'>;
 
@@ -13,11 +114,14 @@ type Props = {
 };
 
 const SearcherScreen: React.FC<Props> = ({ navigation }) => {
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Assuming you have an input for this
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [lostLocation, setLostLocation] = useState<string>('');
+  const [dropdownVisible, setDropdownVisible] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
-  
-  const primaryColor = '#0a7ea4';
-  const backgroundColor = '#11181C';
+
+  const filteredBuildings = lostLocation
+    ? UMD_BUILDINGS.filter((b) => b.toLowerCase().includes(lostLocation.toLowerCase()))
+    : UMD_BUILDINGS;
 
   const searchItems = async () => {
     if (!searchQuery.trim()) {
@@ -25,111 +129,148 @@ const SearcherScreen: React.FC<Props> = ({ navigation }) => {
       return;
     }
     
-    setLoading(true);
+    setLoading(true); // Start loading state
     
     try {
-      const response = await fetch(`${CLIP_API_URL}/match`, {
+      const response = await fetch(`${API_URL}/match`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ description: searchQuery }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: searchQuery, lostLocation }),
       });
       
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       
       const data = await response.json();
       
       if (data.best_match) {
-        console.log('Best match:', data.best_match, 'Confidence:', data.confidence);
-        // Format the result to match your Result screen expectations
-        const searchResults = [
-          {
-            id: '1', // Assuming a single best match for simplicity
-            imagePath: data.best_match, // Path or URL from the backend
-            confidence: data.confidence,
-          },
-        ];
+        console.log('Best match:', data.best_match, 'Confidence:', data.confidence, 'Location:', data.lostLocation);
+        const searchResults = [{
+          id: '1',
+          imagePath: data.best_match,
+          confidence: data.confidence,
+          lostLocation: data.lostLocation,
+        }];
         
-        navigation.navigate('Result', {
-          searchQuery: searchQuery,
-          searchResults: searchResults,
-        });
+        navigation.navigate('Result', { searchQuery, searchResults });
       } else {
-        console.log('Error:', data.error);
         alert("No match found: " + (data.error || "Unknown error"));
       }
     } catch (error) {
       console.error("Error searching for items:", error);
-      alert("An error occurred. Please try again later.");
+      alert("An error occurred: " + error);
     } finally {
-      setLoading(false);
+      setLoading(false); // End loading state
     }
   };
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor }]}>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        <ThemedText style={styles.instructions}>
-          Enter a description of your lost item to search for matches.
+    <View style={styles.container}>
+      <ThemedText style={styles.title}>Find Your Lost Item</ThemedText>
+      
+      <TextInput
+        style={styles.input}
+        placeholder="Describe your lost item (e.g., red backpack)"
+        placeholderTextColor="#888"
+        value={searchQuery}
+        onChangeText={setSearchQuery}
+      />
+      
+      <TextInput
+        style={styles.input}
+        placeholder="Where did you lose it? (Leave blank if don't know)"
+        placeholderTextColor="#888"
+        value={lostLocation}
+        onChangeText={(text) => {
+          setLostLocation(text);
+          setDropdownVisible(true);
+        }}
+        onFocus={() => setDropdownVisible(true)}
+      />
+
+      {dropdownVisible && (
+        <View style={styles.dropdownContainer}>
+          <FlatList
+            data={filteredBuildings}
+            keyExtractor={(item) => item}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={styles.dropdownItem}
+                onPress={() => {
+                  setLostLocation(item);
+                  setDropdownVisible(false);
+                }}
+              >
+                <ThemedText style={styles.dropdownText}>{item}</ThemedText>
+              </TouchableOpacity>
+            )}
+            style={styles.dropdown}
+            showsVerticalScrollIndicator={true} // Show scrollbar for clarity
+          />
+        </View>
+      )}
+      
+      <TouchableOpacity
+        style={[styles.button, loading && styles.buttonPressed]}
+        onPress={searchItems}
+        disabled={loading}
+      >
+        <ThemedText style={styles.buttonText}>
+          {loading ? 'Searching' : 'Search'}
         </ThemedText>
-        
-        {/* Assuming you have a TextInput for searchQuery */}
-        <TextInput
-          style={styles.input}
-          placeholder="e.g., a red backpack"
-          placeholderTextColor="#888"
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
-        
-        <TouchableOpacity
-          style={[styles.searchButton, { backgroundColor: primaryColor, opacity: loading ? 0.7 : 1 }]}
-          onPress={searchItems}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <Text style={styles.buttonText}>Search</Text>
-          )}
-        </TouchableOpacity>
-      </ScrollView>
-    </SafeAreaView>
+      </TouchableOpacity>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollContent: {
     padding: 20,
+    backgroundColor: '#11181C',
   },
-  instructions: {
-    fontSize: 16,
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 20,
     textAlign: 'center',
-    marginBottom: 24,
   },
   input: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    width: '100%',
     padding: 12,
-    fontSize: 16,
-    marginBottom: 24,
-    color: '#000',
+    backgroundColor: '#333',
+    color: '#fff',
+    borderRadius: 8,
+    marginBottom: 10,
   },
-  searchButton: {
-    padding: 16,
+  button: {
+    backgroundColor: '#0a7ea4',
+    padding: 12,
     borderRadius: 8,
     alignItems: 'center',
+  },
+  buttonPressed: {
+    backgroundColor: '#085f7c', // Darker shade when pressed/searching
+    opacity: 0.8, // Slightly faded
   },
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-    fontSize: 16,
+  },
+  dropdownContainer: {
+    width: '100%',
+    maxHeight: 240, // Limit height but allow scrolling
+    marginBottom: 20,
+  },
+  dropdown: {
+    backgroundColor: '#333',
+    borderRadius: 8,
+    width: '100%',
+  },
+  dropdownItem: {
+    padding: 10,
+  },
+  dropdownText: {
+    color: '#fff',
   },
 });
 

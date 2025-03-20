@@ -7,16 +7,14 @@ import { View, StyleSheet, Platform } from 'react-native';
 import { Image } from 'react-native';
 import { ThemedText } from '../components/ThemedText'
 
-// Import screens
+
 import HomeScreen from './screens/HomeScreen';
 import FinderScreen from './screens/FinderScreen';
 import SearcherScreen from './screens/SearcherScreen';
 import ResultScreen from './screens/ResultScreen';
 
-// Import themed components similar to first code
-import ParallaxScrollView from '@/components/ParallaxScrollView'; // Assuming this exists
+import ParallaxScrollView from '@/components/ParallaxScrollView';
 
-// Define navigation param types
 export type RootStackParamList = {
   Home: undefined;
   Finder: undefined;
@@ -34,9 +32,9 @@ export type RootStackParamList = {
 const Stack = createStackNavigator<RootStackParamList>();
 
 export default function App() {
-  const backgroundColor = '#11181C'; // Consistent dark background
+  const backgroundColor = '#11181C';
   const headerBackground = {
-    light: '#A1CEDC', // Matching first code's header colors
+    light: '#A1CEDC',
     dark: '#1D3D47'
   };
 
@@ -55,7 +53,7 @@ export default function App() {
               headerTitleStyle: {
                 fontWeight: 'bold',
               },
-              cardStyle: { backgroundColor }, // Consistent background
+              cardStyle: { backgroundColor },
             }}
           >
             <Stack.Screen
@@ -66,7 +64,7 @@ export default function App() {
                 <View
                     style={{
                     backgroundColor: headerBackground.dark,
-                    height: 90, // Adjust height as needed
+                    height: 90,
                     position: 'relative',
                     }}
                 >
@@ -101,10 +99,10 @@ export default function App() {
 
 const styles = StyleSheet.create({
   fullScreenContainer: {
-    flex: 1,  // Takes full available space
-    width: '100%',  // Full width
-    height: '111%', // Full height
-    position: 'absolute', // Absolute positioning
+    flex: 1,
+    width: '100%', 
+    height: '111%',
+    position: 'absolute',
   },
   titleContainer: {
     flexDirection: 'row',
