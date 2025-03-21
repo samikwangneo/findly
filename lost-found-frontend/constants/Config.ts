@@ -1,3 +1,2 @@
 // API URL for your Python backend
-export const API_URL = 'https://272f-32-217-55-103.ngrok-free.app';
-export const CLIP_API_URL = 'https://stunning-fluid-mls-adams.trycloudflare.com  ';
+export const API_URL = 'https://5fb8-2600-387-15-3d10-00-2.ngrok-free.app';

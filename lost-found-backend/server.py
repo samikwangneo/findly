@@ -11,7 +11,7 @@ from PIL import Image
 app = Flask(__name__)
 CORS(app)
 
-NGROK_BASE_URL = 'https://272f-32-217-55-103.ngrok-free.app'
+NGROK_BASE_URL = 'https://5fb8-2600-387-15-3d10-00-2.ngrok-free.app'
 BASE_DIR = r'C:\Users\samik\Repos\lost-found-priv\lost-found-backend'
 UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
